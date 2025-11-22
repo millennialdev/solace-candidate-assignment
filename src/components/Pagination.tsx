@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { PaginationInfo } from "@/types/advocate";
 
 interface PaginationProps {
@@ -5,7 +6,7 @@ interface PaginationProps {
   onPageChange: (page: number) => void;
 }
 
-export function Pagination({ pagination, onPageChange }: PaginationProps) {
+function PaginationComponent({ pagination, onPageChange }: PaginationProps) {
   const { page, totalPages } = pagination;
 
   const pages = [];
@@ -86,3 +87,5 @@ export function Pagination({ pagination, onPageChange }: PaginationProps) {
     </div>
   );
 }
+
+export const Pagination = memo(PaginationComponent);

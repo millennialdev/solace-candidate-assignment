@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { Advocate } from "@/types/advocate";
 import { formatPhoneNumber, getPhoneLink } from "@/utils/format";
 import { SpecialtyPill } from "./ui/SpecialtyPill";
@@ -7,7 +8,7 @@ interface AdvocateCardProps {
   advocate: Advocate;
 }
 
-export function AdvocateCard({ advocate }: AdvocateCardProps) {
+function AdvocateCardComponent({ advocate }: AdvocateCardProps) {
   return (
     <div className="border border-gray-200 rounded-lg p-4 mb-4 hover:shadow-md transition-shadow bg-white">
       <div className="flex justify-between items-start mb-3">
@@ -45,3 +46,5 @@ export function AdvocateCard({ advocate }: AdvocateCardProps) {
     </div>
   );
 }
+
+export const AdvocateCard = memo(AdvocateCardComponent);

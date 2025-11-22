@@ -1,3 +1,5 @@
+import { memo } from "react";
+
 interface SearchBarProps {
   searchTerm: string;
   onSearchChange: (value: string) => void;
@@ -6,7 +8,7 @@ interface SearchBarProps {
   totalCount?: number;
 }
 
-export function SearchBar({
+function SearchBarComponent({
   searchTerm,
   onSearchChange,
   onReset,
@@ -71,3 +73,5 @@ export function SearchBar({
     </div>
   );
 }
+
+export const SearchBar = memo(SearchBarComponent);
