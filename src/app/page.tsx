@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect, useCallback } from "react";
-import { PaginationInfo } from "@/types/advocate";
+import { Advocate, PaginationInfo } from "@/types/advocate";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useAdvocates } from "@/hooks/useAdvocates";
 import { exportToCSV } from "@/utils/export";
@@ -10,17 +10,40 @@ import { AdvocateTable } from "@/components/AdvocateTable";
 import { AdvocateCard } from "@/components/AdvocateCard";
 import { SkeletonCard, SkeletonTable } from "@/components/ui/SkeletonLoader";
 import { Pagination } from "@/components/Pagination";
-import { FilterSidebar } from "@/components/FilterSidebar";
+import { InlineFilterBar, FilterState } from "@/components/InlineFilterBar";
 
 export default function Home() {
   const { advocates, loading, error } = useAdvocates();
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [selectedDegrees, setSelectedDegrees] = useState<string[]>([]);
-  const [experienceRange, setExperienceRange] = useState<[number, number]>([0, 20]);
-  const itemsPerPage = 10;
+
+  const [filters, setFilters] = useState<FilterState>({
+    selectedCities: [],
+    selectedDegrees: [],
+    selectedSpecialties: [],
+    experienceRange: [0, 20],
+    sortField: "firstName",
+    sortDirection: "asc",
+    itemsPerPage: 10,
+  });
 
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
+
+  // Extract unique cities and specialties from advocates
+  const { cities, specialties } = useMemo(() => {
+    const citiesSet = new Set<string>();
+    const specialtiesSet = new Set<string>();
+
+    advocates.forEach((advocate) => {
+      citiesSet.add(advocate.city);
+      advocate.specialties.forEach((specialty) => specialtiesSet.add(specialty));
+    });
+
+    return {
+      cities: Array.from(citiesSet).sort(),
+      specialties: Array.from(specialtiesSet).sort(),
+    };
+  }, [advocates]);
 
   const filteredAdvocates = useMemo(() => {
     let filtered = advocates;
@@ -42,43 +65,79 @@ export default function Home() {
       });
     }
 
-    // Apply degree filter
-    if (selectedDegrees.length > 0) {
+    // Apply city filter
+    if (filters.selectedCities.length > 0) {
       filtered = filtered.filter((advocate) =>
-        selectedDegrees.includes(advocate.degree)
+        filters.selectedCities.includes(advocate.city)
+      );
+    }
+
+    // Apply degree filter
+    if (filters.selectedDegrees.length > 0) {
+      filtered = filtered.filter((advocate) =>
+        filters.selectedDegrees.includes(advocate.degree)
+      );
+    }
+
+    // Apply specialty filter
+    if (filters.selectedSpecialties.length > 0) {
+      filtered = filtered.filter((advocate) =>
+        advocate.specialties.some((specialty) =>
+          filters.selectedSpecialties.includes(specialty)
+        )
       );
     }
 
     // Apply experience range filter
     filtered = filtered.filter(
       (advocate) =>
-        advocate.yearsOfExperience >= experienceRange[0] &&
-        advocate.yearsOfExperience <= experienceRange[1]
+        advocate.yearsOfExperience >= filters.experienceRange[0] &&
+        advocate.yearsOfExperience <= filters.experienceRange[1]
     );
 
     return filtered;
-  }, [advocates, debouncedSearchTerm, selectedDegrees, experienceRange]);
+  }, [advocates, debouncedSearchTerm, filters]);
+
+  // Apply sorting
+  const sortedAdvocates = useMemo(() => {
+    return [...filteredAdvocates].sort((a, b) => {
+      const aValue = a[filters.sortField as keyof Advocate];
+      const bValue = b[filters.sortField as keyof Advocate];
+
+      if (typeof aValue === "string" && typeof bValue === "string") {
+        return filters.sortDirection === "asc"
+          ? aValue.localeCompare(bValue)
+          : bValue.localeCompare(aValue);
+      }
+
+      if (typeof aValue === "number" && typeof bValue === "number") {
+        return filters.sortDirection === "asc" ? aValue - bValue : bValue - aValue;
+      }
+
+      return 0;
+    });
+  }, [filteredAdvocates, filters.sortField, filters.sortDirection]);
 
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [debouncedSearchTerm, selectedDegrees, experienceRange]);
+  }, [debouncedSearchTerm, filters]);
 
   // Client-side pagination
   const paginationInfo: PaginationInfo = useMemo(() => {
     return {
       page: currentPage,
-      limit: itemsPerPage,
-      total: filteredAdvocates.length,
-      totalPages: Math.ceil(filteredAdvocates.length / itemsPerPage),
+      limit: filters.itemsPerPage,
+      total: sortedAdvocates.length,
+      totalPages: Math.ceil(sortedAdvocates.length / filters.itemsPerPage),
     };
-  }, [currentPage, filteredAdvocates.length]);
+  }, [currentPage, sortedAdvocates.length, filters.itemsPerPage]);
 
   const paginatedAdvocates = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    return filteredAdvocates.slice(startIndex, endIndex);
-  }, [filteredAdvocates, currentPage]);
+    const startIndex = (currentPage - 1) * filters.itemsPerPage;
+    const endIndex = startIndex + filters.itemsPerPage;
+    return sortedAdvocates.slice(startIndex, endIndex);
+  }, [sortedAdvocates, currentPage, filters.itemsPerPage]);
 
   const handleSearchChange = useCallback((value: string) => {
     setSearchTerm(value);
@@ -93,9 +152,25 @@ export default function Home() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
 
+  const handleFilterChange = useCallback((newFilters: Partial<FilterState>) => {
+    setFilters((prev) => ({ ...prev, ...newFilters }));
+  }, []);
+
+  const handleClearFilters = useCallback(() => {
+    setFilters({
+      selectedCities: [],
+      selectedDegrees: [],
+      selectedSpecialties: [],
+      experienceRange: [0, 20],
+      sortField: "firstName",
+      sortDirection: "asc",
+      itemsPerPage: 10,
+    });
+  }, []);
+
   const handleExport = useCallback(() => {
-    exportToCSV(filteredAdvocates);
-  }, [filteredAdvocates]);
+    exportToCSV(sortedAdvocates);
+  }, [sortedAdvocates]);
 
   if (loading) {
     return (
@@ -164,74 +239,70 @@ export default function Home() {
           totalCount={advocates.length}
         />
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Filters sidebar */}
-          <div className="lg:col-span-1">
-            <FilterSidebar
-              selectedDegrees={selectedDegrees}
-              onDegreeChange={setSelectedDegrees}
-              experienceRange={experienceRange}
-              onExperienceChange={setExperienceRange}
-              onExport={handleExport}
-              totalResults={filteredAdvocates.length}
+        <InlineFilterBar
+          filters={filters}
+          onFilterChange={handleFilterChange}
+          onClearFilters={handleClearFilters}
+          onExport={handleExport}
+          totalResults={sortedAdvocates.length}
+          cities={cities}
+          specialties={specialties}
+        />
+
+        {sortedAdvocates.length === 0 ? (
+          <div className="text-center py-16 bg-white rounded-lg border border-gray-200">
+            <svg
+              className="mx-auto h-12 w-12 text-gray-400 mb-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <h3 className="text-lg font-medium text-gray-900 mb-1">
+              No advocates found
+            </h3>
+            <p className="text-gray-500 mb-4">
+              {searchTerm
+                ? `No advocates match your search for "${searchTerm}"`
+                : "No advocates match your current filters"}
+            </p>
+            <button
+              onClick={() => {
+                handleReset();
+                handleClearFilters();
+              }}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Clear all filters
+            </button>
+          </div>
+        ) : (
+          <>
+            {/* Mobile: Card view */}
+            <div className="block md:hidden space-y-4">
+              {paginatedAdvocates.map((advocate, index) => (
+                <AdvocateCard key={index} advocate={advocate} />
+              ))}
+            </div>
+
+            {/* Desktop: Table view */}
+            <div className="hidden md:block bg-white rounded-lg shadow-sm overflow-hidden">
+              <AdvocateTable advocates={paginatedAdvocates} />
+            </div>
+
+            {/* Pagination */}
+            <Pagination
+              pagination={paginationInfo}
+              onPageChange={handlePageChange}
             />
-          </div>
-
-          {/* Main content */}
-          <div className="lg:col-span-3">
-            {filteredAdvocates.length === 0 ? (
-              <div className="text-center py-16 bg-white rounded-lg border border-gray-200">
-                <svg
-                  className="mx-auto h-12 w-12 text-gray-400 mb-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                <h3 className="text-lg font-medium text-gray-900 mb-1">
-                  No advocates found
-                </h3>
-                <p className="text-gray-500 mb-4">
-                  {searchTerm
-                    ? `No advocates match your search for "${searchTerm}"`
-                    : "No advocates match your current filters"}
-                </p>
-                <button
-                  onClick={handleReset}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  Clear filters
-                </button>
-              </div>
-            ) : (
-              <>
-                {/* Mobile: Card view */}
-                <div className="block md:hidden">
-                  {paginatedAdvocates.map((advocate, index) => (
-                    <AdvocateCard key={index} advocate={advocate} />
-                  ))}
-                </div>
-
-                {/* Desktop: Table view */}
-                <div className="hidden md:block bg-white rounded-lg shadow-sm overflow-hidden">
-                  <AdvocateTable advocates={paginatedAdvocates} />
-                </div>
-
-                {/* Pagination */}
-                <Pagination
-                  pagination={paginationInfo}
-                  onPageChange={handlePageChange}
-                />
-              </>
-            )}
-          </div>
-        </div>
+          </>
+        )}
       </div>
     </main>
   );
