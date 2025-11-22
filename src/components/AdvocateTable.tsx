@@ -1,4 +1,3 @@
-import { useMemo, useState } from "react";
 import { Advocate } from "@/types/advocate";
 import { formatPhoneNumber, getPhoneLink } from "@/utils/format";
 import { SpecialtyPill } from "./ui/SpecialtyPill";
@@ -8,53 +7,12 @@ interface AdvocateTableProps {
   advocates: Advocate[];
 }
 
-type SortField = "firstName" | "lastName" | "city" | "degree" | "yearsOfExperience";
-type SortDirection = "asc" | "desc";
-
+/**
+ * AdvocateTable displays advocates in a table format
+ * Note: Sorting is handled by the parent component (page.tsx)
+ * to maintain consistency with filters
+ */
 export function AdvocateTable({ advocates }: AdvocateTableProps) {
-  const [sortField, setSortField] = useState<SortField | null>(null);
-  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
-
-  const handleSort = (field: SortField) => {
-    if (sortField === field) {
-      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
-    } else {
-      setSortField(field);
-      setSortDirection("asc");
-    }
-  };
-
-  const sortedAdvocates = useMemo(() => {
-    if (!sortField) return advocates;
-
-    return [...advocates].sort((a, b) => {
-      const aValue = a[sortField];
-      const bValue = b[sortField];
-
-      if (typeof aValue === "string" && typeof bValue === "string") {
-        return sortDirection === "asc"
-          ? aValue.localeCompare(bValue)
-          : bValue.localeCompare(aValue);
-      }
-
-      if (typeof aValue === "number" && typeof bValue === "number") {
-        return sortDirection === "asc" ? aValue - bValue : bValue - aValue;
-      }
-
-      return 0;
-    });
-  }, [advocates, sortField, sortDirection]);
-
-  const SortIcon = ({ field }: { field: SortField }) => {
-    if (sortField !== field) {
-      return <span className="text-gray-400 ml-1">⇅</span>;
-    }
-    return (
-      <span className="ml-1">
-        {sortDirection === "asc" ? "↑" : "↓"}
-      </span>
-    );
-  };
 
   if (advocates.length === 0) {
     return (
@@ -69,46 +27,31 @@ export function AdvocateTable({ advocates }: AdvocateTableProps) {
       <table className="min-w-full border-collapse border border-gray-300">
         <thead className="bg-gray-100">
           <tr>
-            <th
-              className="border border-gray-300 px-4 py-2 text-left cursor-pointer hover:bg-gray-200 transition-colors"
-              onClick={() => handleSort("firstName")}
-            >
-              First Name <SortIcon field="firstName" />
+            <th className="border border-gray-300 px-4 py-2 text-left font-semibold text-gray-700">
+              First Name
             </th>
-            <th
-              className="border border-gray-300 px-4 py-2 text-left cursor-pointer hover:bg-gray-200 transition-colors"
-              onClick={() => handleSort("lastName")}
-            >
-              Last Name <SortIcon field="lastName" />
+            <th className="border border-gray-300 px-4 py-2 text-left font-semibold text-gray-700">
+              Last Name
             </th>
-            <th
-              className="border border-gray-300 px-4 py-2 text-left cursor-pointer hover:bg-gray-200 transition-colors"
-              onClick={() => handleSort("city")}
-            >
-              City <SortIcon field="city" />
+            <th className="border border-gray-300 px-4 py-2 text-left font-semibold text-gray-700">
+              City
             </th>
-            <th
-              className="border border-gray-300 px-4 py-2 text-left cursor-pointer hover:bg-gray-200 transition-colors"
-              onClick={() => handleSort("degree")}
-            >
-              Degree <SortIcon field="degree" />
+            <th className="border border-gray-300 px-4 py-2 text-left font-semibold text-gray-700">
+              Degree
             </th>
-            <th className="border border-gray-300 px-4 py-2 text-left">
+            <th className="border border-gray-300 px-4 py-2 text-left font-semibold text-gray-700">
               Specialties
             </th>
-            <th
-              className="border border-gray-300 px-4 py-2 text-left cursor-pointer hover:bg-gray-200 transition-colors"
-              onClick={() => handleSort("yearsOfExperience")}
-            >
-              Experience <SortIcon field="yearsOfExperience" />
+            <th className="border border-gray-300 px-4 py-2 text-left font-semibold text-gray-700">
+              Experience
             </th>
-            <th className="border border-gray-300 px-4 py-2 text-left">
+            <th className="border border-gray-300 px-4 py-2 text-left font-semibold text-gray-700">
               Phone Number
             </th>
           </tr>
         </thead>
         <tbody>
-          {sortedAdvocates.map((advocate, index) => (
+          {advocates.map((advocate, index) => (
             <tr key={index} className="hover:bg-gray-50">
               <td className="border border-gray-300 px-4 py-2">
                 {advocate.firstName}

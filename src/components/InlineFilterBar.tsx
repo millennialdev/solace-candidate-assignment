@@ -1,5 +1,6 @@
 import { memo, useState, useEffect } from "react";
 import { RangeSlider } from "./ui/RangeSlider";
+import { LoadingButton } from "./ui/LoadingSpinner";
 
 export interface FilterState {
   selectedCities: string[];
@@ -19,6 +20,7 @@ interface InlineFilterBarProps {
   totalResults: number;
   cities: string[];
   specialties: string[];
+  isExporting?: boolean;
 }
 
 const DEGREES = ["MD", "PhD", "MSW"];
@@ -38,6 +40,7 @@ function InlineFilterBarComponent({
   totalResults,
   cities,
   specialties,
+  isExporting = false,
 }: InlineFilterBarProps) {
   const [isExpanded, setIsExpanded] = useState(() => {
     // Load from localStorage, default to expanded
@@ -124,10 +127,11 @@ function InlineFilterBarComponent({
                 Clear all
               </button>
             )}
-            <button
+            <LoadingButton
+              loading={isExporting}
               onClick={onExport}
               disabled={totalResults === 0}
-              className="px-3 sm:px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-xs sm:text-sm font-medium flex items-center gap-2"
+              className="px-3 sm:px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-xs sm:text-sm font-medium"
             >
               <svg
                 className="w-4 h-4"
@@ -144,7 +148,7 @@ function InlineFilterBarComponent({
               </svg>
               <span className="hidden sm:inline">Export CSV</span>
               <span>({totalResults})</span>
-            </button>
+            </LoadingButton>
           </div>
         </div>
       </div>

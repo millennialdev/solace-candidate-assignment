@@ -16,6 +16,7 @@ export default function Home() {
   const { advocates, loading, error } = useAdvocates();
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [isExporting, setIsExporting] = useState<boolean>(false);
 
   const [filters, setFilters] = useState<FilterState>({
     selectedCities: [],
@@ -168,8 +169,15 @@ export default function Home() {
     });
   }, []);
 
-  const handleExport = useCallback(() => {
-    exportToCSV(sortedAdvocates);
+  const handleExport = useCallback(async () => {
+    setIsExporting(true);
+    try {
+      // Add a small delay to show loading state for better UX
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      exportToCSV(sortedAdvocates);
+    } finally {
+      setIsExporting(false);
+    }
   }, [sortedAdvocates]);
 
   if (loading) {
@@ -247,6 +255,7 @@ export default function Home() {
           totalResults={sortedAdvocates.length}
           cities={cities}
           specialties={specialties}
+          isExporting={isExporting}
         />
 
         {sortedAdvocates.length === 0 ? (
