@@ -3,16 +3,18 @@ import db from "../../../db";
 import { advocates } from "../../../db/schema";
 import { advocateData } from "../../../db/seed/advocates";
 import { like, or, sql, and } from "drizzle-orm";
+import { logger } from "../../../utils/logger";
+import { validatePagination, validateSearchQuery } from "../../../utils/validation";
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
-  const page = parseInt(searchParams.get("page") || "1");
-  const limit = parseInt(searchParams.get("limit") || "10");
-  const search = searchParams.get("search") || "";
 
-  // Validate pagination parameters
-  const validPage = Math.max(1, page);
-  const validLimit = Math.min(Math.max(1, limit), 100); // Cap at 100
+  // Validate and sanitize inputs
+  const { page: validPage, limit: validLimit } = validatePagination({
+    page: searchParams.get("page"),
+    limit: searchParams.get("limit"),
+  });
+  const search = validateSearchQuery(searchParams.get("search"));
   const offset = (validPage - 1) * validLimit;
 
   try {
@@ -77,7 +79,7 @@ export async function GET(request: NextRequest) {
         );
       } catch (dbError) {
         // Database error - fall back to mock data
-        console.warn("Database error, falling back to mock data:", dbError);
+        logger.warn("Database error, falling back to mock data", { error: dbError });
       }
     }
 
@@ -121,7 +123,7 @@ export async function GET(request: NextRequest) {
       }
     );
   } catch (error) {
-    console.error("Error fetching advocates:", error);
+    logger.error("Error fetching advocates", { error });
     return Response.json(
       { error: "Failed to fetch advocates" },
       { status: 500 }

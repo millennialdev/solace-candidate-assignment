@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { Advocate, AdvocatesResponse } from "@/types/advocate";
+import { logger } from "@/utils/logger";
 
 interface UseAdvocatesResult {
   advocates: Advocate[];
@@ -14,7 +15,7 @@ export function useAdvocates(): UseAdvocatesResult {
   const [error, setError] = useState<string | null>(null);
 
   const fetchAdvocates = useCallback(() => {
-    console.log("fetching advocates...");
+    logger.debug("Fetching advocates from API");
     setLoading(true);
     setError(null);
 
@@ -30,7 +31,7 @@ export function useAdvocates(): UseAdvocatesResult {
         setLoading(false);
       })
       .catch((err) => {
-        console.error("Error fetching advocates:", err);
+        logger.error("Error fetching advocates", { error: err });
         setError(err.message);
         setLoading(false);
       });
