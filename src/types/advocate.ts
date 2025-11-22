@@ -10,6 +10,14 @@ export interface Advocate {
   createdAt?: Date;
 }
 
+export interface PaginationInfo {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
 export interface AdvocatesResponse {
   data: Advocate[];
+  pagination?: PaginationInfo;
 }

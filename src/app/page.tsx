@@ -18,7 +18,9 @@ export default function Home() {
     setLoading(true);
     setError(null);
 
-    fetch("/api/advocates")
+    // Fetch all advocates with a high limit to support client-side filtering
+    // In PR 3, we'll implement server-side filtering and proper pagination
+    fetch("/api/advocates?limit=100")
       .then((response) => {
         if (!response.ok) {
           throw new Error("Failed to fetch advocates");
