@@ -9,12 +9,17 @@ interface AdvocateCardProps {
 }
 
 function AdvocateCardComponent({ advocate }: AdvocateCardProps) {
+  const fullName = `${advocate.firstName} ${advocate.lastName}`;
+
   return (
-    <div className="border border-gray-200 rounded-lg p-4 mb-4 hover:shadow-md transition-shadow bg-white">
+    <article
+      className="border border-gray-200 rounded-lg p-4 mb-4 hover:shadow-md transition-shadow bg-white"
+      aria-label={`${fullName}, ${advocate.degree} in ${advocate.city}`}
+    >
       <div className="flex justify-between items-start mb-3">
         <div>
           <h3 className="text-lg font-semibold text-gray-900">
-            {advocate.firstName} {advocate.lastName}
+            {fullName}
           </h3>
           <p className="text-sm text-gray-600">
             {advocate.degree} • {advocate.city}
@@ -24,8 +29,14 @@ function AdvocateCardComponent({ advocate }: AdvocateCardProps) {
       </div>
 
       <div className="mb-3">
-        <p className="text-sm font-medium text-gray-700 mb-2">Specialties:</p>
-        <div className="flex flex-wrap">
+        <p className="text-sm font-medium text-gray-700 mb-2" id={`specialties-${advocate.id}`}>
+          Specialties:
+        </p>
+        <div
+          className="flex flex-wrap"
+          role="list"
+          aria-labelledby={`specialties-${advocate.id}`}
+        >
           {advocate.specialties.map((specialty, index) => (
             <SpecialtyPill key={index} specialty={specialty} />
           ))}
@@ -36,14 +47,18 @@ function AdvocateCardComponent({ advocate }: AdvocateCardProps) {
         <a
           href={getPhoneLink(advocate.phoneNumber)}
           className="text-blue-600 hover:underline font-medium text-sm"
+          aria-label={`Call ${fullName} at ${formatPhoneNumber(advocate.phoneNumber)}`}
         >
           {formatPhoneNumber(advocate.phoneNumber)}
         </a>
-        <button className="text-sm text-gray-600 hover:text-gray-900 px-3 py-1 border border-gray-300 rounded hover:bg-gray-50 transition-colors">
+        <button
+          className="text-sm text-gray-600 hover:text-gray-900 px-3 py-1 border border-gray-300 rounded hover:bg-gray-50 transition-colors"
+          aria-label={`View profile for ${fullName}`}
+        >
           View Profile
         </button>
       </div>
-    </div>
+    </article>
   );
 }
 

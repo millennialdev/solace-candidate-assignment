@@ -11,6 +11,7 @@ import { AdvocateCard } from "@/components/AdvocateCard";
 import { SkeletonCard, SkeletonTable } from "@/components/ui/SkeletonLoader";
 import { Pagination } from "@/components/Pagination";
 import { InlineFilterBar, FilterState } from "@/components/InlineFilterBar";
+import { SkipNav } from "@/components/SkipNav";
 
 export default function Home() {
   const { advocates, loading, error } = useAdvocates();
@@ -228,35 +229,40 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">
-            Solace Advocates
-          </h1>
-          <p className="text-gray-600">
-            Find mental health professionals that match your needs
-          </p>
-        </div>
+    <>
+      <SkipNav />
+      <main id="main-content" className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
+        <div className="max-w-7xl mx-auto">
+          <header className="mb-8">
+            <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">
+              Solace Advocates
+            </h1>
+            <p className="text-gray-600">
+              Find mental health professionals that match your needs
+            </p>
+          </header>
 
-        <SearchBar
-          searchTerm={searchTerm}
-          onSearchChange={handleSearchChange}
-          onReset={handleReset}
-          resultCount={filteredAdvocates.length}
-          totalCount={advocates.length}
-        />
+          <SearchBar
+            id="search-bar"
+            searchTerm={searchTerm}
+            onSearchChange={handleSearchChange}
+            onReset={handleReset}
+            resultCount={filteredAdvocates.length}
+            totalCount={advocates.length}
+          />
 
-        <InlineFilterBar
-          filters={filters}
-          onFilterChange={handleFilterChange}
-          onClearFilters={handleClearFilters}
-          onExport={handleExport}
-          totalResults={sortedAdvocates.length}
-          cities={cities}
-          specialties={specialties}
-          isExporting={isExporting}
-        />
+        <section id="filter-bar" aria-label="Filter advocates">
+          <InlineFilterBar
+            filters={filters}
+            onFilterChange={handleFilterChange}
+            onClearFilters={handleClearFilters}
+            onExport={handleExport}
+            totalResults={sortedAdvocates.length}
+            cities={cities}
+            specialties={specialties}
+            isExporting={isExporting}
+          />
+        </section>
 
         {sortedAdvocates.length === 0 ? (
           <div className="text-center py-16 bg-white rounded-lg border border-gray-200">
@@ -312,7 +318,8 @@ export default function Home() {
             />
           </>
         )}
-      </div>
-    </main>
+        </div>
+      </main>
+    </>
   );
 }

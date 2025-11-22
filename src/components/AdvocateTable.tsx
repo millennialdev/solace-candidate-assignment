@@ -24,67 +24,78 @@ export function AdvocateTable({ advocates }: AdvocateTableProps) {
 
   return (
     <div className="overflow-x-auto">
-      <table className="min-w-full border-collapse border border-gray-300">
+      <table
+        className="min-w-full border-collapse border border-gray-300"
+        aria-label="Advocates directory"
+        role="table"
+      >
+        <caption className="sr-only">
+          List of mental health advocates with their credentials, specialties, and contact information
+        </caption>
         <thead className="bg-gray-100">
           <tr>
-            <th className="border border-gray-300 px-4 py-2 text-left font-semibold text-gray-700">
+            <th scope="col" className="border border-gray-300 px-4 py-2 text-left font-semibold text-gray-700">
               First Name
             </th>
-            <th className="border border-gray-300 px-4 py-2 text-left font-semibold text-gray-700">
+            <th scope="col" className="border border-gray-300 px-4 py-2 text-left font-semibold text-gray-700">
               Last Name
             </th>
-            <th className="border border-gray-300 px-4 py-2 text-left font-semibold text-gray-700">
+            <th scope="col" className="border border-gray-300 px-4 py-2 text-left font-semibold text-gray-700">
               City
             </th>
-            <th className="border border-gray-300 px-4 py-2 text-left font-semibold text-gray-700">
+            <th scope="col" className="border border-gray-300 px-4 py-2 text-left font-semibold text-gray-700">
               Degree
             </th>
-            <th className="border border-gray-300 px-4 py-2 text-left font-semibold text-gray-700">
+            <th scope="col" className="border border-gray-300 px-4 py-2 text-left font-semibold text-gray-700">
               Specialties
             </th>
-            <th className="border border-gray-300 px-4 py-2 text-left font-semibold text-gray-700">
+            <th scope="col" className="border border-gray-300 px-4 py-2 text-left font-semibold text-gray-700">
               Experience
             </th>
-            <th className="border border-gray-300 px-4 py-2 text-left font-semibold text-gray-700">
+            <th scope="col" className="border border-gray-300 px-4 py-2 text-left font-semibold text-gray-700">
               Phone Number
             </th>
           </tr>
         </thead>
         <tbody>
-          {advocates.map((advocate, index) => (
-            <tr key={index} className="hover:bg-gray-50">
-              <td className="border border-gray-300 px-4 py-2">
-                {advocate.firstName}
-              </td>
-              <td className="border border-gray-300 px-4 py-2">
-                {advocate.lastName}
-              </td>
-              <td className="border border-gray-300 px-4 py-2">
-                {advocate.city}
-              </td>
-              <td className="border border-gray-300 px-4 py-2">
-                <span className="font-medium">{advocate.degree}</span>
-              </td>
-              <td className="border border-gray-300 px-4 py-2">
-                <div className="flex flex-wrap max-w-md">
-                  {advocate.specialties.map((specialty, idx) => (
-                    <SpecialtyPill key={idx} specialty={specialty} />
-                  ))}
-                </div>
-              </td>
-              <td className="border border-gray-300 px-4 py-2">
-                <ExperienceBadge years={advocate.yearsOfExperience} />
-              </td>
-              <td className="border border-gray-300 px-4 py-2">
-                <a
-                  href={getPhoneLink(advocate.phoneNumber)}
-                  className="text-blue-600 hover:underline"
-                >
-                  {formatPhoneNumber(advocate.phoneNumber)}
-                </a>
-              </td>
-            </tr>
-          ))}
+          {advocates.map((advocate, index) => {
+            const fullName = `${advocate.firstName} ${advocate.lastName}`;
+            return (
+              <tr key={index} className="hover:bg-gray-50">
+                <td className="border border-gray-300 px-4 py-2">
+                  {advocate.firstName}
+                </td>
+                <td className="border border-gray-300 px-4 py-2">
+                  {advocate.lastName}
+                </td>
+                <td className="border border-gray-300 px-4 py-2">
+                  {advocate.city}
+                </td>
+                <td className="border border-gray-300 px-4 py-2">
+                  <span className="font-medium">{advocate.degree}</span>
+                </td>
+                <td className="border border-gray-300 px-4 py-2">
+                  <div className="flex flex-wrap max-w-md" role="list" aria-label="Specialties">
+                    {advocate.specialties.map((specialty, idx) => (
+                      <SpecialtyPill key={idx} specialty={specialty} />
+                    ))}
+                  </div>
+                </td>
+                <td className="border border-gray-300 px-4 py-2">
+                  <ExperienceBadge years={advocate.yearsOfExperience} />
+                </td>
+                <td className="border border-gray-300 px-4 py-2">
+                  <a
+                    href={getPhoneLink(advocate.phoneNumber)}
+                    className="text-blue-600 hover:underline"
+                    aria-label={`Call ${fullName} at ${formatPhoneNumber(advocate.phoneNumber)}`}
+                  >
+                    {formatPhoneNumber(advocate.phoneNumber)}
+                  </a>
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
