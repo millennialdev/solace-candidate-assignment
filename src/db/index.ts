@@ -4,11 +4,10 @@ import postgres from "postgres";
 const setup = () => {
   if (!process.env.DATABASE_URL) {
     console.error("DATABASE_URL is not set");
-    return {
-      select: () => ({
-        from: () => [],
-      }),
-    };
+    // Return a mock database instance with the proper type
+    // This will be type-compatible but will fail at runtime if used
+    // The seed route now checks for DATABASE_URL before using db methods
+    return drizzle(null as any);
   }
 
   // for query purposes
