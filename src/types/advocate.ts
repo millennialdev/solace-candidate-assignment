@@ -6,7 +6,7 @@ export interface Advocate {
   degree: "MD" | "PhD" | "MSW";
   specialties: string[];
   yearsOfExperience: number;
-  phoneNumber: number;
+  phoneNumber: string;
   createdAt?: Date;
 }
 

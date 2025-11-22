@@ -1,27 +1,25 @@
 /**
  * Formats a phone number to (XXX) XXX-XXXX format
- * @param phoneNumber - The phone number as a number (e.g., 5551234567)
+ * @param phoneNumber - The phone number as a string (e.g., "5551234567")
  * @returns Formatted phone number string
  */
-export function formatPhoneNumber(phoneNumber: number): string {
-  const phoneStr = phoneNumber.toString();
-
-  if (phoneStr.length !== 10) {
-    return phoneStr;
+export function formatPhoneNumber(phoneNumber: string): string {
+  if (phoneNumber.length !== 10) {
+    return phoneNumber;
   }
 
-  const areaCode = phoneStr.slice(0, 3);
-  const middle = phoneStr.slice(3, 6);
-  const last = phoneStr.slice(6, 10);
+  const areaCode = phoneNumber.slice(0, 3);
+  const middle = phoneNumber.slice(3, 6);
+  const last = phoneNumber.slice(6, 10);
 
   return `(${areaCode}) ${middle}-${last}`;
 }
 
 /**
  * Creates a tel: link for phone numbers
- * @param phoneNumber - The phone number as a number
+ * @param phoneNumber - The phone number as a string
  * @returns tel: URL string
  */
-export function getPhoneLink(phoneNumber: number): string {
+export function getPhoneLink(phoneNumber: string): string {
   return `tel:+1${phoneNumber}`;
 }
