@@ -78,7 +78,7 @@ export default function Home() {
 
   const handleSearchChange = useCallback((value: string) => {
     setSearchTerm(value);
-    // Add to recent searches when user types a meaningful search
+    // Add to recent searches when user submits a search
     if (value.trim().length >= 3) {
       addSearch(value.trim());
     }

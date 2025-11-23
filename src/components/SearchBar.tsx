@@ -26,7 +26,13 @@ function SearchBarComponent({
   onClearRecentSearches,
 }: SearchBarProps) {
   const [showRecentSearches, setShowRecentSearches] = useState(false);
+  const [inputValue, setInputValue] = useState(searchTerm);
   const searchRef = useRef<HTMLDivElement>(null);
+
+  // Sync input value with prop when it changes externally (e.g., from recent searches or reset)
+  useEffect(() => {
+    setInputValue(searchTerm);
+  }, [searchTerm]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -39,6 +45,33 @@ function SearchBarComponent({
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  const handleSearch = () => {
+    const trimmedValue = inputValue.trim();
+    onSearchChange(trimmedValue);
+    setShowRecentSearches(false);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      handleSearch();
+    }
+  };
+
+  const handleResetOrSearch = () => {
+    if (searchTerm) {
+      // If there's an active search, reset it
+      onReset();
+      setInputValue("");
+    } else if (inputValue.trim()) {
+      // If there's input but no active search, perform search
+      handleSearch();
+    }
+  };
+
+  // Determine if there's a pending search (input differs from active search)
+  const hasPendingSearch = inputValue.trim() !== searchTerm && inputValue.trim().length > 0;
+
   return (
     <section
       id={id}
@@ -54,8 +87,9 @@ function SearchBarComponent({
           <input
             id="search-input"
             type="search"
-            value={searchTerm}
-            onChange={(e) => onSearchChange(e.target.value)}
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            onKeyDown={handleKeyDown}
             onFocus={() => recentSearches.length > 0 && setShowRecentSearches(true)}
             placeholder="Search by name, city, degree, specialty, or experience..."
             className="w-full px-4 py-2.5 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm"
@@ -125,12 +159,18 @@ function SearchBarComponent({
         </div>
 
         <button
-          onClick={onReset}
-          disabled={!searchTerm}
-          className="px-6 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
-          aria-label="Reset search"
+          onClick={handleResetOrSearch}
+          disabled={!searchTerm && !inputValue.trim()}
+          className={`px-6 py-2.5 border rounded-lg font-medium transition-colors shadow-sm ${
+            searchTerm
+              ? "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
+              : hasPendingSearch
+                ? "bg-blue-600 border-blue-600 text-white hover:bg-blue-700"
+                : "bg-white border-gray-300 text-gray-700"
+          } disabled:opacity-50 disabled:cursor-not-allowed`}
+          aria-label={searchTerm ? "Reset search" : "Search"}
         >
-          Reset
+          {searchTerm ? "Reset" : "Search"}
         </button>
       </div>
 
