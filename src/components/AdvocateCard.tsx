@@ -1,8 +1,11 @@
-import { memo } from "react";
+"use client";
+
+import { memo, useState } from "react";
 import { Advocate } from "@/types/advocate";
 import { formatPhoneNumber, getPhoneLink } from "@/utils/format";
 import { SpecialtyPill } from "./ui/SpecialtyPill";
 import { ExperienceBadge } from "./ui/ExperienceBadge";
+import { AdvocateProfileModal } from "./AdvocateProfileModal";
 
 interface AdvocateCardProps {
   advocate: Advocate;
@@ -10,6 +13,7 @@ interface AdvocateCardProps {
 
 function AdvocateCardComponent({ advocate }: AdvocateCardProps) {
   const fullName = `${advocate.firstName} ${advocate.lastName}`;
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   return (
     <article
@@ -52,12 +56,19 @@ function AdvocateCardComponent({ advocate }: AdvocateCardProps) {
           {formatPhoneNumber(advocate.phoneNumber)}
         </a>
         <button
+          onClick={() => setIsModalOpen(true)}
           className="text-sm text-gray-600 hover:text-gray-900 px-3 py-1 border border-gray-300 rounded hover:bg-gray-50 transition-colors"
           aria-label={`View profile for ${fullName}`}
         >
           View Profile
         </button>
       </div>
+
+      <AdvocateProfileModal
+        advocate={advocate}
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+      />
     </article>
   );
 }

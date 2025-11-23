@@ -1,7 +1,11 @@
+"use client";
+
+import { useState } from "react";
 import { Advocate } from "@/types/advocate";
 import { formatPhoneNumber, getPhoneLink } from "@/utils/format";
 import { SpecialtyPill } from "./ui/SpecialtyPill";
 import { ExperienceBadge } from "./ui/ExperienceBadge";
+import { AdvocateProfileModal } from "./AdvocateProfileModal";
 
 interface AdvocateTableProps {
   advocates: Advocate[];
@@ -13,6 +17,7 @@ interface AdvocateTableProps {
  * to maintain consistency with filters
  */
 export function AdvocateTable({ advocates }: AdvocateTableProps) {
+  const [selectedAdvocate, setSelectedAdvocate] = useState<Advocate | null>(null);
 
   if (advocates.length === 0) {
     return (
@@ -55,6 +60,9 @@ export function AdvocateTable({ advocates }: AdvocateTableProps) {
             <th scope="col" className="border border-gray-300 px-4 py-2 text-left font-semibold text-gray-700">
               Phone Number
             </th>
+            <th scope="col" className="border border-gray-300 px-4 py-2 text-left font-semibold text-gray-700">
+              Actions
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -93,11 +101,28 @@ export function AdvocateTable({ advocates }: AdvocateTableProps) {
                     {formatPhoneNumber(advocate.phoneNumber)}
                   </a>
                 </td>
+                <td className="border border-gray-300 px-4 py-2">
+                  <button
+                    onClick={() => setSelectedAdvocate(advocate)}
+                    className="text-sm text-blue-600 hover:text-blue-700 font-medium underline"
+                    aria-label={`View profile for ${fullName}`}
+                  >
+                    View Profile
+                  </button>
+                </td>
               </tr>
             );
           })}
         </tbody>
       </table>
+
+      {selectedAdvocate && (
+        <AdvocateProfileModal
+          advocate={selectedAdvocate}
+          isOpen={!!selectedAdvocate}
+          onClose={() => setSelectedAdvocate(null)}
+        />
+      )}
     </div>
   );
 }
