@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect, useCallback } from "react";
 import { Advocate, PaginationInfo } from "@/types/advocate";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useAdvocates } from "@/hooks/useAdvocates";
+import { useRecentSearches } from "@/hooks/useRecentSearches";
 import { exportToCSV } from "@/utils/export";
 import { SearchBar } from "@/components/SearchBar";
 import { AdvocateTable } from "@/components/AdvocateTable";
@@ -15,6 +16,7 @@ import { SkipNav } from "@/components/SkipNav";
 
 export default function Home() {
   const { advocates, loading, error } = useAdvocates();
+  const { recentSearches, addSearch, clearSearches } = useRecentSearches();
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [isExporting, setIsExporting] = useState<boolean>(false);
@@ -143,10 +145,18 @@ export default function Home() {
 
   const handleSearchChange = useCallback((value: string) => {
     setSearchTerm(value);
-  }, []);
+    // Add to recent searches when user types a meaningful search
+    if (value.trim().length >= 3) {
+      addSearch(value.trim());
+    }
+  }, [addSearch]);
 
   const handleReset = useCallback(() => {
     setSearchTerm("");
+  }, []);
+
+  const handleSelectRecentSearch = useCallback((search: string) => {
+    setSearchTerm(search);
   }, []);
 
   const handlePageChange = useCallback((page: number) => {
@@ -249,6 +259,9 @@ export default function Home() {
             onReset={handleReset}
             resultCount={filteredAdvocates.length}
             totalCount={advocates.length}
+            recentSearches={recentSearches}
+            onSelectRecentSearch={handleSelectRecentSearch}
+            onClearRecentSearches={clearSearches}
           />
 
         <section id="filter-bar" aria-label="Filter advocates">
