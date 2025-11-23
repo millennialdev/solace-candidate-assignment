@@ -6,6 +6,7 @@ import { formatPhoneNumber, getPhoneLink } from "@/utils/format";
 import { SpecialtyPill } from "./ui/SpecialtyPill";
 import { ExperienceBadge } from "./ui/ExperienceBadge";
 import { AdvocateProfileModal } from "./AdvocateProfileModal";
+import { Avatar } from "./ui/Avatar";
 
 interface AdvocateTableProps {
   advocates: Advocate[];
@@ -71,7 +72,14 @@ export function AdvocateTable({ advocates }: AdvocateTableProps) {
             return (
               <tr key={index} className="hover:bg-gray-50">
                 <td className="border border-gray-300 px-4 py-2">
-                  {advocate.firstName}
+                  <div className="flex items-center gap-2">
+                    <Avatar
+                      firstName={advocate.firstName}
+                      lastName={advocate.lastName}
+                      size="sm"
+                    />
+                    <span>{advocate.firstName}</span>
+                  </div>
                 </td>
                 <td className="border border-gray-300 px-4 py-2">
                   {advocate.lastName}

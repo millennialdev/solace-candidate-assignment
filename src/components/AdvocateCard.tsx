@@ -6,6 +6,7 @@ import { formatPhoneNumber, getPhoneLink } from "@/utils/format";
 import { SpecialtyPill } from "./ui/SpecialtyPill";
 import { ExperienceBadge } from "./ui/ExperienceBadge";
 import { AdvocateProfileModal } from "./AdvocateProfileModal";
+import { Avatar } from "./ui/Avatar";
 
 interface AdvocateCardProps {
   advocate: Advocate;
@@ -21,13 +22,20 @@ function AdvocateCardComponent({ advocate }: AdvocateCardProps) {
       aria-label={`${fullName}, ${advocate.degree} in ${advocate.city}`}
     >
       <div className="flex justify-between items-start mb-3">
-        <div>
-          <h3 className="text-lg font-semibold text-gray-900">
-            {fullName}
-          </h3>
-          <p className="text-sm text-gray-600">
-            {advocate.degree} • {advocate.city}
-          </p>
+        <div className="flex items-center gap-3">
+          <Avatar
+            firstName={advocate.firstName}
+            lastName={advocate.lastName}
+            size="md"
+          />
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900">
+              {fullName}
+            </h3>
+            <p className="text-sm text-gray-600">
+              {advocate.degree} • {advocate.city}
+            </p>
+          </div>
         </div>
         <ExperienceBadge years={advocate.yearsOfExperience} />
       </div>

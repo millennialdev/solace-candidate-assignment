@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { Advocate, PaginationInfo } from "@/types/advocate";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useAdvocates } from "@/hooks/useAdvocates";
 import { useRecentSearches } from "@/hooks/useRecentSearches";
+import { useKeyboardShortcut } from "@/hooks/useKeyboardShortcut";
 import { exportToCSV } from "@/utils/export";
 import { SearchBar } from "@/components/SearchBar";
 import { AdvocateTable } from "@/components/AdvocateTable";
@@ -20,6 +21,12 @@ export default function Home() {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [isExporting, setIsExporting] = useState<boolean>(false);
+
+  // Keyboard shortcut: Press "/" to focus search
+  useKeyboardShortcut("/", () => {
+    const searchInput = document.getElementById("search-input");
+    searchInput?.focus();
+  });
 
   const [filters, setFilters] = useState<FilterState>({
     selectedCities: [],
