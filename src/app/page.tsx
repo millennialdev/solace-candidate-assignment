@@ -16,7 +16,6 @@ import { InlineFilterBar, FilterState } from "@/components/InlineFilterBar";
 import { SkipNav } from "@/components/SkipNav";
 
 export default function Home() {
-  const { advocates, loading, error } = useAdvocates();
   const { recentSearches, addSearch, clearSearches } = useRecentSearches();
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -40,7 +39,28 @@ export default function Home() {
 
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
-  // Extract unique cities and specialties from advocates
+  // Fetch advocates with server-side filtering, sorting, and pagination
+  const { advocates, pagination, loading, error } = useAdvocates({
+    page: currentPage,
+    limit: filters.itemsPerPage,
+    search: debouncedSearchTerm,
+    cities: filters.selectedCities,
+    degrees: filters.selectedDegrees,
+    specialties: filters.selectedSpecialties,
+    minExperience: filters.experienceRange[0],
+    maxExperience: filters.experienceRange[1],
+    sortField: filters.sortField,
+    sortDirection: filters.sortDirection,
+  });
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearchTerm, filters]);
+
+  // For filter dropdowns, we still need unique cities and specialties
+  // We'll fetch these from the current page's data for now
+  // In a real app, these might come from a separate endpoint
   const { cities, specialties } = useMemo(() => {
     const citiesSet = new Set<string>();
     const specialtiesSet = new Set<string>();
@@ -55,100 +75,6 @@ export default function Home() {
       specialties: Array.from(specialtiesSet).sort(),
     };
   }, [advocates]);
-
-  const filteredAdvocates = useMemo(() => {
-    let filtered = advocates;
-
-    // Apply search filter
-    if (debouncedSearchTerm) {
-      const searchLower = debouncedSearchTerm.toLowerCase();
-      filtered = filtered.filter((advocate) => {
-        return (
-          advocate.firstName.toLowerCase().includes(searchLower) ||
-          advocate.lastName.toLowerCase().includes(searchLower) ||
-          advocate.city.toLowerCase().includes(searchLower) ||
-          advocate.degree.toLowerCase().includes(searchLower) ||
-          advocate.specialties.some((specialty) =>
-            specialty.toLowerCase().includes(searchLower)
-          ) ||
-          advocate.yearsOfExperience.toString().includes(searchLower)
-        );
-      });
-    }
-
-    // Apply city filter
-    if (filters.selectedCities.length > 0) {
-      filtered = filtered.filter((advocate) =>
-        filters.selectedCities.includes(advocate.city)
-      );
-    }
-
-    // Apply degree filter
-    if (filters.selectedDegrees.length > 0) {
-      filtered = filtered.filter((advocate) =>
-        filters.selectedDegrees.includes(advocate.degree)
-      );
-    }
-
-    // Apply specialty filter
-    if (filters.selectedSpecialties.length > 0) {
-      filtered = filtered.filter((advocate) =>
-        advocate.specialties.some((specialty) =>
-          filters.selectedSpecialties.includes(specialty)
-        )
-      );
-    }
-
-    // Apply experience range filter
-    filtered = filtered.filter(
-      (advocate) =>
-        advocate.yearsOfExperience >= filters.experienceRange[0] &&
-        advocate.yearsOfExperience <= filters.experienceRange[1]
-    );
-
-    return filtered;
-  }, [advocates, debouncedSearchTerm, filters]);
-
-  // Apply sorting
-  const sortedAdvocates = useMemo(() => {
-    return [...filteredAdvocates].sort((a, b) => {
-      const aValue = a[filters.sortField as keyof Advocate];
-      const bValue = b[filters.sortField as keyof Advocate];
-
-      if (typeof aValue === "string" && typeof bValue === "string") {
-        return filters.sortDirection === "asc"
-          ? aValue.localeCompare(bValue)
-          : bValue.localeCompare(aValue);
-      }
-
-      if (typeof aValue === "number" && typeof bValue === "number") {
-        return filters.sortDirection === "asc" ? aValue - bValue : bValue - aValue;
-      }
-
-      return 0;
-    });
-  }, [filteredAdvocates, filters.sortField, filters.sortDirection]);
-
-  // Reset to page 1 when filters change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [debouncedSearchTerm, filters]);
-
-  // Client-side pagination
-  const paginationInfo: PaginationInfo = useMemo(() => {
-    return {
-      page: currentPage,
-      limit: filters.itemsPerPage,
-      total: sortedAdvocates.length,
-      totalPages: Math.ceil(sortedAdvocates.length / filters.itemsPerPage),
-    };
-  }, [currentPage, sortedAdvocates.length, filters.itemsPerPage]);
-
-  const paginatedAdvocates = useMemo(() => {
-    const startIndex = (currentPage - 1) * filters.itemsPerPage;
-    const endIndex = startIndex + filters.itemsPerPage;
-    return sortedAdvocates.slice(startIndex, endIndex);
-  }, [sortedAdvocates, currentPage, filters.itemsPerPage]);
 
   const handleSearchChange = useCallback((value: string) => {
     setSearchTerm(value);
@@ -190,13 +116,31 @@ export default function Home() {
   const handleExport = useCallback(async () => {
     setIsExporting(true);
     try {
-      // Add a small delay to show loading state for better UX
-      await new Promise((resolve) => setTimeout(resolve, 100));
-      exportToCSV(sortedAdvocates);
+      // Fetch all advocates with current filters (no pagination limit)
+      const queryParams = new URLSearchParams();
+      queryParams.append("limit", "100000"); // Get all results
+      if (debouncedSearchTerm) queryParams.append("search", debouncedSearchTerm);
+      if (filters.selectedCities.length > 0) {
+        queryParams.append("cities", filters.selectedCities.join(","));
+      }
+      if (filters.selectedDegrees.length > 0) {
+        queryParams.append("degrees", filters.selectedDegrees.join(","));
+      }
+      if (filters.selectedSpecialties.length > 0) {
+        queryParams.append("specialties", filters.selectedSpecialties.join(","));
+      }
+      queryParams.append("minExperience", filters.experienceRange[0].toString());
+      queryParams.append("maxExperience", filters.experienceRange[1].toString());
+      queryParams.append("sortField", filters.sortField);
+      queryParams.append("sortDirection", filters.sortDirection);
+
+      const response = await fetch(`/api/advocates?${queryParams.toString()}`);
+      const data = await response.json();
+      exportToCSV(data.data);
     } finally {
       setIsExporting(false);
     }
-  }, [sortedAdvocates]);
+  }, [debouncedSearchTerm, filters]);
 
   if (loading) {
     return (
@@ -264,8 +208,8 @@ export default function Home() {
             searchTerm={searchTerm}
             onSearchChange={handleSearchChange}
             onReset={handleReset}
-            resultCount={filteredAdvocates.length}
-            totalCount={advocates.length}
+            resultCount={pagination?.total ?? 0}
+            totalCount={pagination?.total ?? 0}
             recentSearches={recentSearches}
             onSelectRecentSearch={handleSelectRecentSearch}
             onClearRecentSearches={clearSearches}
@@ -277,14 +221,14 @@ export default function Home() {
             onFilterChange={handleFilterChange}
             onClearFilters={handleClearFilters}
             onExport={handleExport}
-            totalResults={sortedAdvocates.length}
+            totalResults={pagination?.total ?? 0}
             cities={cities}
             specialties={specialties}
             isExporting={isExporting}
           />
         </section>
 
-        {sortedAdvocates.length === 0 ? (
+        {advocates.length === 0 ? (
           <div className="text-center py-16 bg-white rounded-lg border border-gray-200">
             <svg
               className="mx-auto h-12 w-12 text-gray-400 mb-4"
@@ -321,21 +265,23 @@ export default function Home() {
           <>
             {/* Mobile: Card view */}
             <div className="block md:hidden space-y-4">
-              {paginatedAdvocates.map((advocate, index) => (
+              {advocates.map((advocate, index) => (
                 <AdvocateCard key={index} advocate={advocate} />
               ))}
             </div>
 
             {/* Desktop: Table view */}
             <div className="hidden md:block bg-white rounded-lg shadow-sm overflow-hidden">
-              <AdvocateTable advocates={paginatedAdvocates} />
+              <AdvocateTable advocates={advocates} />
             </div>
 
             {/* Pagination */}
-            <Pagination
-              pagination={paginationInfo}
-              onPageChange={handlePageChange}
-            />
+            {pagination && (
+              <Pagination
+                pagination={pagination}
+                onPageChange={handlePageChange}
+              />
+            )}
           </>
         )}
         </div>

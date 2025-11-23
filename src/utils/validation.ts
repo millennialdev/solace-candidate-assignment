@@ -77,3 +77,34 @@ export function validateYearsRange(value: string | null): number | null {
   if (isNaN(num)) return null;
   return Math.max(0, Math.min(num, 100)); // 0-100 years
 }
+
+/**
+ * Validate and parse comma-separated array of values
+ */
+export function validateArray(value: string | null, maxItems = 50): string[] {
+  if (!value) return [];
+
+  const items = value.split(",").map((item) => sanitizeString(item)).filter(Boolean);
+  return items.slice(0, maxItems); // Limit number of items
+}
+
+/**
+ * Validate sort field
+ */
+export function validateSortField(
+  field: string | null
+): "firstName" | "lastName" | "city" | "degree" | "yearsOfExperience" {
+  const validFields = ["firstName", "lastName", "city", "degree", "yearsOfExperience"];
+  if (field && validFields.includes(field)) {
+    return field as "firstName" | "lastName" | "city" | "degree" | "yearsOfExperience";
+  }
+  return "firstName"; // Default
+}
+
+/**
+ * Validate sort direction
+ */
+export function validateSortDirection(direction: string | null): "asc" | "desc" {
+  if (direction === "desc") return "desc";
+  return "asc"; // Default
+}
